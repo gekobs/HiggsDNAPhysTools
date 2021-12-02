@@ -197,27 +197,34 @@ def make_data_mc_plot(data, bkg, sig, savename, **kwargs):
     rat_lim = kwargs.get("rat_lim", [0.0, 2.0])
     overflow = kwargs.get("overflow", False)
     log_y = kwargs.get("log_y", False)
+    scale_sig=kwargs.get("scale",None)
 
     bins = kwargs.get("bins")  
 
     h_data = Hist1D(data, bins=bins, overflow=overflow, label="Data")
+    if normalize:
+        h_data /= h_data.integral
 
     h_bkg = []
     h_bkg_syst_up = []
     h_bkg_syst_down = []
     for proc, plot_data in bkg.items():
         h = Hist1D(plot_data["array"], weights = plot_data["weights"], bins = bins, overflow = overflow, label=proc)
+        if normalize:
+            h /= h.integral
         h_bkg.append(h) 
 
 
     h_bkg_total = None 
-
+    total_bkg_sum=0
     for h in h_bkg:
         if h_bkg_total is None:
             h_bkg_total = h.copy()
         else:
-            h_bkg_total += h        
+            h_bkg_total += h   
 
+    # if normalize:
+    #     h_bkg_total /= h_bkg_total.integral
     h_bkg_total_syst_up = None
     h_bkg_total_syst_down = None  
 
@@ -225,8 +232,11 @@ def make_data_mc_plot(data, bkg, sig, savename, **kwargs):
     h_sig = []
     for proc, plot_data in sig.items():
         h = Hist1D(plot_data["array"], weights = plot_data["weights"], bins = bins, overflow = overflow, label=proc) 
+        if normalize:
+            h /= h.integral
         h_sig.append(h)
-
+    
+    
     fig, (ax1,ax2) = plt.subplots(2, sharex=True, figsize=(12,9), gridspec_kw=dict(height_ratios=[3, 1]))
     plt.grid()
     h_data.plot(ax=ax1, color = "black", errors = True)
